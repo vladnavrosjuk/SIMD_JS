@@ -1,0 +1,723 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Модель ОКМД</title>
+</head>
+<body>
+<table id="mytabA" border="1"></table>
+<table id="mytabB" border="1"></table>
+<table id="mytabC" border="1"></table>
+<div id="Help"></div>
+
+<script src="https://www.gstatic.com/charts/loader.js"></script>
+<script src="http://code.jquery.com/jquery-1.8.3.js"></script>
+<script>
+
+    function timetoprogramm(nElement, countall1, countall2, left, rightleft, rigthright, m, p, q){
+        var suumatime=+document.getElementById("Sum").value;
+
+        var degatime=+document.getElementById("Deg").value;
+
+        var timemulti=+document.getElementById("Mult").value;
+        var comparetime=+document.getElementById("Oper").value;
+
+        var modultome=+document.getElementById("Abs").value;
+
+        var stepentime=+document.getElementById("Pow").value;
+
+
+        var timeprog = (2*modultome+comparetime)*Math.ceil(countall1/nElement);
+        timeprog += (timemulti)*Math.ceil(left/nElement);
+        timeprog += (comparetime)*Math.ceil(countall2/nElement);
+        timeprog += (stepentime+suumatime)*Math.ceil(rightleft/nElement);
+        timeprog += (stepentime+degatime+modultome+timemulti)*Math.ceil(rigthright/nElement);
+
+        return timeprog;
+    }
+
+    function finishprogram(){
+
+
+        var p=document.getElementById("FirstInput").value; //получаю значение p
+        var m=document.getElementById("SecondInput").value;
+        var q=document.getElementById("ThirdInput").value;
+        var suumatime=+document.getElementById("Sum").value;
+        var degatime=+document.getElementById("Deg").value;
+        var timemulti=+document.getElementById("Mult").value;
+        var comparetime=+document.getElementById("Oper").value;
+        var modultome=+document.getElementById("Abs").value;
+        var stepentime=+document.getElementById("Pow").value;
+        var nElement=+document.getElementById("nElement").value;
+        var widthOfCell = 100;
+        var A=document.getElementById("MatrixA").value;
+        var B=document.getElementById("MatrixB").value;
+
+        if (A==""){
+            A = new Array(+p*+m);
+            for (var i = 0; i<+p*+m; i++){
+                A[i] = Math.random()*2-1;
+                A[i] = A[i].toFixed(4);
+            }
+        }
+        else{
+            A = A.split(' ');
+        }
+        if (B==""){
+            B = new Array(+m*+q);
+            for (var i = 0; i<+m*+q; i++){
+                B[i] = Math.random()*2-1; //bkj = [-1;1]
+                B[i] = B[i].toFixed(4);
+            }
+        }
+        else {
+            B = B.split(' ');
+        }
+
+        var tableA = document.getElementById('mytabA');
+        var k = 0;
+        var newLine = tableA.insertRow(0);
+        newLine.innerHTML += "A"
+        for (var i = 0; i<+p; i++){ //на экран вывожу матрицу А
+            var newLine = tableA.insertRow(i+1);
+            for (var j = 0; j<+m; j++){
+                var newCell = newLine.insertCell(j);
+                newCell.innerHTML += A[k];
+                newCell.width = widthOfCell;
+                k++;
+            }
+        }
+        var tableB = document.getElementById('mytabB');
+        k=0;
+        var newLine = tableB.insertRow(0);
+        newLine.innerHTML += "B"
+        for (var i = 0; i<+m; i++){
+            var newLine = tableB.insertRow(i+1);
+            for (var j = 0; j<+q; j++){
+                var newCell = newLine.insertCell(j);
+                newCell.innerHTML += B[k];
+                newCell.width = widthOfCell;
+                k++;
+            }
+        }
+        var d = new Array(+m);
+        for (var k = 0; k<+m; k++){
+            d[k] = new Array(+p);
+            for (var i = 0; i<+p; i++)
+                d[k][i]=new Array(+m);
+        }
+        var left = 0;
+        var rightleft = 0;
+        var rightright = 0;
+        var countall1 = 0;
+        var countall2 = 0;
+        var timeprogr = 0;
+        for (var k = 0; k<+m; k++)
+            for (var i = 0; i<+p; i++)
+                for (var j = 0; j<+q; j++){
+                    var aik = Number(A[i*+m + k])
+                    var bkj = Number(B[k*+q + j])
+                    countall1++;
+                    if (Math.abs(aik)<=Math.abs(bkj)) {
+                        var t = aik*bkj;
+                        d[k][i][j]=t;
+                        left++;
+                    }
+                    else{
+                        countall2++;
+                        if (aik==0) {
+                            var t = Math.pow(aik, 2) + bkj;
+                            d[k][i][j]= t; rightleft++; }
+                        else {
+                            var t = Math.pow(aik, 2)-Math.abs(aik*bkj);
+                            d[k][i][j]=t; rightright++; } //за возведение в квадрат и разность и произведение
+                    }
+                }
+
+        var C = new Array(+p);
+        for (var i = 0; i<+p; i++)
+            C[i]=new Array(+q)
+
+
+        var count = 0,st=0;
+        for (var i = 0; i<+p; i++)
+            for (var j = 0; j<+q; j++){
+                var sum = 0;
+                count = 0;
+                for (var k = 0; k<+m; k++){
+                    sum += d[k][i][j];
+                    count = count + 1; //последовательно
+                }
+                C[i][j] = sum;
+                st = st + count/2*suumatime;
+
+            }
+
+        timeprogr = timetoprogramm(nElement, countall1, countall2, left, rightleft, rightright, m, p, q) + st;
+        var allTime1 = timetoprogramm(1, countall1, countall2, left, rightleft, rightright, m, p, q) + st;
+
+        var tableC = document.getElementById('mytabC');
+        var newLine = tableC.insertRow(0);
+        newLine.innerHTML += "C" //на экран вывожу матрицу C
+        for (var i = 0; i<+p; i++){
+            var newLine = tableC.insertRow(i+1);
+            for (var j = 0; j<+q; j++){
+                var newCell = newLine.insertCell(j);
+                newCell.innerHTML += C[i][j].toFixed(4);
+                newCell.width = widthOfCell;
+            }
+        }
+
+        var Lr = timetoprogramm(1, countall1, countall2, left, rightleft, rightright, m, p, q) + st;
+        var Lsum = timetoprogramm(nElement, countall1, countall2, left, rightleft, rightright, m, p, q) + st;
+
+        newLine = tableC.insertRow(-1)
+        newCell = newLine.insertCell(0);
+        newCell.innerHTML += "Time " + timeprogr;
+
+    }
+    var data;
+    google.charts.load('current', {'packages':['line']});
+    $(document).ready(function() {
+        function drawChartKyN () {
+
+            var data_f = new google.visualization.DataTable();
+            data_f.addColumn('number', '');
+            for (var i = 1; i<=20; i++)
+                data_f.addColumn('number', (i).toString());
+
+            data_f.addRows(data);
+
+            var options = {
+                title: 'Коэффициент ускорения от количества процессорных элементов',
+                'width':1100,
+                'height':800
+            };
+
+            var chart = new google.charts.Line(document.getElementById('curve_chart'));
+
+            chart.draw(data_f, options);
+        }
+
+        function drawChartDN () {
+
+            var data_f = new google.visualization.DataTable();
+            data_f.addColumn('number', '');
+            for (var i = 1; i<=20; i++)
+                data_f.addColumn('number', (i).toString());
+
+            data_f.addRows(data);
+
+            var options = {
+                title: 'Коэффициент ускорения от количества процессорных элементов',
+                'width':1100,
+                'height':800
+            };
+
+            var chart = new google.charts.Line(document.getElementById('curve_chart'));
+
+            chart.draw(data_f, options);
+        }
+
+        function drawChartDR () {
+
+            var data_f = new google.visualization.DataTable();
+            data_f.addColumn('number', '');
+            for (var i = 1; i<=20; i++)
+                data_f.addColumn('number', (i).toString());
+
+            data_f.addRows(data);
+
+            var options = {
+                title: 'Коэффициент ускорения от количества процессорных элементов',
+                'width':1100,
+                'height':800
+            };
+
+            var chart = new google.charts.Line(document.getElementById('curve_chart'));
+
+            chart.draw(data_f, options);
+        }
+
+        function drawChartKyR () {
+
+            var data_f = new google.visualization.DataTable();
+            data_f.addColumn('number', '');
+            for (var i = 1; i<=10; i++)
+                data_f.addColumn('number', (i).toString());
+
+            data_f.addRows(data);
+
+            var options = {
+                title: 'Коэффициент ускорения от количества процессорных элементов',
+                'width':1100,
+                'height':800
+            };
+
+            var chart = new google.charts.Line(document.getElementById('curve_chart'));
+
+            chart.draw(data_f, options);
+        }
+
+        function drawChartER () {
+
+            var data_f = new google.visualization.DataTable();
+            data_f.addColumn('number', '');
+            for (var i = 1; i<=10; i++)
+                data_f.addColumn('number', (i).toString());
+
+            data_f.addRows(data);
+
+            var options = {
+                title: 'Коэффициент ускорения от количества процессорных элементов',
+                'width':1100,
+                'height':800
+            };
+
+            var chart = new google.charts.Line(document.getElementById('curve_chart'));
+
+            chart.draw(data_f, options);
+        }
+
+        function drawChartEN () {
+
+            var data_f = new google.visualization.DataTable();
+            data_f.addColumn('number', '');
+            for (var i = 1; i<=20; i++)
+                data_f.addColumn('number', (i).toString());
+
+            data_f.addRows(data);
+
+            var options = {
+                title: 'Коэффициент ускорения от количества процессорных элементов',
+                'width':1100,
+                'height':800
+            };
+
+            var chart = new google.charts.Line(document.getElementById('curve_chart'));
+
+            chart.draw(data_f, options);
+        }
+
+        $('#Graphics2').click(function () {
+            en();
+            drawChartEN();
+        });
+
+        $('#Graphics1').click(function () {
+            kyn();
+            drawChartKyN();
+        });
+
+        $('#Graphics5').click(function () {
+            dn();
+            drawChartDN();
+        });
+
+        $('#Graphics6').click(function () {
+            dr();
+            drawChartDR();
+        });
+
+        $('#Graphics3').click(function () {
+            kyr();
+            drawChartKyR();
+        });
+
+        $('#Graphics4').click(function () {
+            er();
+            drawChartER();
+        });
+    });
+    function message(messageString){
+        document.getElementById('Help').innerHTML = "<b>" + messageString + "<b>";
+    }
+
+    function dr(){ //В 1 строке должен быть для 1 процессорного элемента все ранги
+        data = new Array(90); //n=45, r=30
+        for (var i = 0; i<90; i++)
+            data[i] = new Array(20);
+
+        var p=1;
+        var m=1;
+        var count = +m;
+        var countTime1 = 0;
+        while(count>1){
+            if (2*nElement>=count)
+                count=count-nElement;
+            else
+                count=count-Math.ceil(count/nElement);
+            countTime1++;
+        }
+
+        A = new Array(+p*+m);
+        for (var i = 0; i<+p*+m; i++){
+            A[i] = Math.random()*2-1;
+            A[i] = A[i].toFixed(4);
+        }
+        B = new Array(+m*120);
+        for (var i = 0; i<+m*120; i++){
+            B[i] = Math.random()*2-1;
+            B[i] = B[i].toFixed(4);
+        }
+
+        for (var q = 0; q<90; q++){
+
+
+            var leftCompare = 0;
+            var right_leftCompare = 0;
+            var right_rightCompare = 0;
+            var allCount1 = 0;
+            var allCount2 = 0;
+            for (var k = 0; k<+m; k++)
+                for (var i = 0; i<+p; i++)
+                    for (var j = 0; j<+q; j++){
+                        var aik = Number(A[i*+m + k]) //A[i][k]
+                        var bkj = Number(B[k*+q + j]) //B[k][j]
+                        allCount1++;
+                        if (Math.abs(aik)<=Math.abs(bkj))
+                            leftCompare++;
+                        else{
+                            allCount2++;
+                            if (aik==0)
+                                right_leftCompare++;
+                            else
+                                right_rightCompare++;
+                        }
+                    }
+
+            var Lr = timetoprogramm(1, allCount1, allCount2, leftCompare, right_leftCompare, right_rightCompare, m, p, q);
+
+            for (var j = 1; j<=20; j++){
+                var Lsum = timetoprogramm(j, allCount1, allCount2, leftCompare, right_leftCompare, right_rightCompare, m, p, q);
+                data[q][j] = +q*Lsum/Lr;
+            }
+        }
+
+        for (var i = 1; i<90; i++)
+            data[i][0] = i+1;
+
+        data[0] = new Array(20);
+        for (var i = 0; i<=20; i++)
+            data[0][i] = null;
+    }
+
+    function dn(){ //В 1 строке должен быть для 1 процессорного элемента все ранги
+        data = new Array(26); //n=45, r=30
+        for (var i = 1; i<=25; i++)
+            data[i] = new Array(20);
+
+        var p=1;
+        var m=1;
+        var count = +m;
+        var countTime1 = 0;
+        while(count>1){
+            if (2*nElement>=count)
+                count=count-nElement;
+            else
+                count=count-Math.ceil(count/nElement);
+            countTime1++;
+        }
+
+        A = new Array(+p*+m);
+        for (var i = 0; i<+p*+m; i++){
+            A[i] = Math.random()*2-1;
+            A[i] = A[i].toFixed(4);
+        }
+        B = new Array(+m*120);
+        for (var i = 0; i<+m*120; i++){
+            B[i] = Math.random()*2-1;
+            B[i] = B[i].toFixed(4);
+        }
+
+        for (var q = 1; q<=20; q++){
+
+
+            var leftCompare = 0;
+            var right_leftCompare = 0;
+            var right_rightCompare = 0;
+            var allCount1 = 0;
+            var allCount2 = 0;
+            for (var k = 0; k<+m; k++)
+                for (var i = 0; i<+p; i++)
+                    for (var j = 0; j<+q; j++){
+                        var aik = Number(A[i*+m + k]) //A[i][k]
+                        var bkj = Number(B[k*+q + j]) //B[k][j]
+                        allCount1++;
+                        if (Math.abs(aik)<=Math.abs(bkj))
+                            leftCompare++;
+                        else{
+                            allCount2++;
+                            if (aik==0)
+                                right_leftCompare++;
+                            else
+                                right_rightCompare++;
+                        }
+                    }
+
+            var Lr = timetoprogramm(1, allCount1, allCount2, leftCompare, right_leftCompare, right_rightCompare, m, p, q);
+
+            for (var j = 1; j<=25; j++){
+                var Lsum = timetoprogramm(j, allCount1, allCount2, leftCompare, right_leftCompare, right_rightCompare, m, p, q);
+                data[j][q] = +q*Lsum/Lr;
+            }
+        }
+
+        for (var i = 1; i<=25; i++)
+            data[i][0] = i;
+
+        data[0] = new Array(20);
+        for (var i = 0; i<=20; i++)
+            data[0][i] = null;
+    }
+
+    function er(){ //В 1 строке должен быть для 1 процессорного элемента все ранги
+        data = new Array(120); //n=45, r=30
+        for (var i = 0; i<120; i++)
+            data[i] = new Array(10);
+
+        var p=1;
+        var m=1;
+
+        A = new Array(+p*+m);
+        for (var i = 0; i<+p*+m; i++){
+            A[i] = Math.random()*2-1;
+            A[i] = A[i].toFixed(4);
+        }
+        B = new Array(+m*120);
+        for (var i = 0; i<+m*120;
+             i++){
+            B[i] = Math.random()*2-1;
+            B[i] = B[i].toFixed(4);
+        }
+
+        for (var q = 0; q<120; q++){
+
+            var leftCompare = 0;
+            var right_leftCompare = 0;
+            var right_rightCompare = 0;
+            var allCount1 = 0;
+            var allCount2 = 0;
+            for (var k = 0; k<+m; k++)
+                for (var i = 0; i<+p; i++)
+                    for (var j = 0; j<+q; j++){
+                        var aik = Number(A[i*+m + k]) //A[i][k]
+                        var bkj = Number(B[k*+q + j]) //B[k][j]
+                        allCount1++;
+                        if (Math.abs(aik)<=Math.abs(bkj))
+                            leftCompare++;
+                        else{
+                            allCount2++;
+                            if (aik==0)
+                                right_leftCompare++;
+                            else
+                                right_rightCompare++;
+                        }
+                    }
+
+            var allTime = new Array(10)
+
+            for (var i = 1; i<=10; i++)
+                allTime[i] = timetoprogramm(i, allCount1, allCount2, leftCompare, right_leftCompare, right_rightCompare, m, p, q)
+
+
+            for (var j = 1; j<=10; j++)
+                data[q][j] = allTime[1]/(allTime[j]*j);
+
+        }
+
+        for (var i = 0; i<120; i++)
+            data[i][0] = i+1;
+    }
+
+    function kyr(){ //В 1 строке должен быть для 1 процессорного элемента все ранги
+        data = new Array(120); //n=45, r=30
+        for (var i = 0; i<120; i++)
+            data[i] = new Array(10);
+
+        var p=1;
+        var m=1;
+        A = new Array(+p*+m);
+        for (var i = 0; i<+p*+m; i++){
+            A[i] = Math.random()*2-1;
+            A[i] = A[i].toFixed(4);
+        }
+        B = new Array(+m*120);
+        for (var i = 0; i<+m*120; i++){
+            B[i] = Math.random()*2-1;
+            B[i] = B[i].toFixed(4);
+        }
+        for (var q = 0; q<120; q++){
+
+
+            var leftCompare = 0;
+            var right_leftCompare = 0;
+            var right_rightCompare = 0;
+            var allCount1 = 0;
+            var allCount2 = 0;
+            for (var k = 0; k<+m; k++)
+                for (var i = 0; i<+p; i++)
+                    for (var j = 0; j<+q; j++){
+                        var aik = Number(A[i*+m + k]) //A[i][k]
+                        var bkj = Number(B[k*+q + j]) //B[k][j]
+                        allCount1++;
+                        if (Math.abs(aik)<=Math.abs(bkj))
+                            leftCompare++;
+                        else{
+                            allCount2++;
+                            if (aik==0)
+                                right_leftCompare++;
+                            else
+                                right_rightCompare++;
+                        }
+                    }
+
+            var allTime = new Array(10)
+
+            for (var i = 1; i<=10; i++)
+                allTime[i] = timetoprogramm(i, allCount1, allCount2, leftCompare, right_leftCompare, right_rightCompare, m, p, q)
+
+
+            for (var j = 1; j<=10; j++)
+                data[q][j] = allTime[1]/allTime[j];
+
+        }
+
+        for (var i = 0; i<120; i++)
+            data[i][0] = i+1;
+    }
+
+
+    function kyn(){ //В 1 строке должен быть для 1 процессорного элемента все ранги
+        data = new Array(45); //n=45, r=30
+        for (var i = 0; i<45; i++)
+            data[i] = new Array(20);
+
+        var p=1;
+        var m=1;
+        A = new Array(+p*+m);
+        for (var i = 0; i<+p*+m; i++){
+            A[i] = Math.random()*2-1;
+            A[i] = A[i].toFixed(4);
+        }
+        B = new Array(+m*120);
+        for (var i = 0; i<+m*120; i++){
+            B[i] = Math.random()*2-1;
+            B[i] = B[i].toFixed(4);
+        }
+        for (var q = 1; q<=20; q++){
+
+
+            var leftCompare = 0;
+            var right_leftCompare = 0;
+            var right_rightCompare = 0;
+            var allCount1 = 0;
+            var allCount2 = 0;
+            for (var k = 0; k<+m; k++)
+                for (var i = 0; i<+p; i++)
+                    for (var j = 0; j<+q; j++){
+                        var aik = Number(A[i*+m + k]) //A[i][k]
+                        var bkj = Number(B[k*+q + j]) //B[k][j]
+                        allCount1++;
+                        if (Math.abs(aik)<=Math.abs(bkj))
+                            leftCompare++;
+                        else{
+                            allCount2++;
+                            if (aik==0)
+                                right_leftCompare++;
+                            else
+                                right_rightCompare++;
+                        }
+                    }
+
+            var allTime = new Array(30)
+
+            for (var i = 0; i<45; i++)
+                allTime[i] = timetoprogramm(i, allCount1, allCount2, leftCompare, right_leftCompare, right_rightCompare, m, p, q)
+
+
+            for (var j = 0; j<45; j++)
+                data[j][q] = allTime[1]/allTime[j];
+
+        }
+
+        for (var i = 0; i<45; i++)
+            data[i][0] = i+1;
+    }
+
+    function en(){ //В 1 строке должен быть для 1 процессорного элемента все ранги
+        data = new Array(25); //n=45, r=30
+        for (var i = 0; i<25; i++)
+            data[i] = new Array(20);
+
+        var p=1;
+        var m=1;
+        for (var q = 1; q<=20; q++){
+            A = new Array(+p*+m);
+            for (var i = 0; i<+p*+m; i++){
+                A[i] = Math.random()*2-1;
+                A[i] = A[i].toFixed(4);
+            }
+            B = new Array(+m*120);
+            for (var i = 0; i<+m*120; i++){
+                B[i] = Math.random()*2-1;
+                B[i] = B[i].toFixed(4);
+            }
+
+            var leftCompare = 0;
+            var right_leftCompare = 0;
+            var right_rightCompare = 0;
+            var allCount1 = 0;
+            var allCount2 = 0;
+            for (var k = 0; k<+m; k++)
+                for (var i = 0; i<+p; i++)
+                    for (var j = 0; j<+q; j++){
+                        var aik = Number(A[i*+m + k]) //A[i][k]
+                        var bkj = Number(B[k*+q + j]) //B[k][j]
+                        allCount1++;
+                        if (Math.abs(aik)<=Math.abs(bkj))
+                            leftCompare++;
+                        else{
+                            allCount2++;
+                            if (aik==0)
+                                right_leftCompare++;
+                            else
+                                right_rightCompare++;
+                        }
+                    }
+
+            var allTime = new Array(20)
+
+            for (var i = 0; i<25; i++)
+                allTime[i] = timetoprogramm(i, allCount1, allCount2, leftCompare, right_leftCompare, right_rightCompare, m, p, q)
+
+
+            for (var j = 0; j<25; j++)
+                data[j][q] = allTime[1]/(allTime[j]*j);
+
+        }
+
+        for (var i = 0; i<25; i++)
+            data[i][0] = i+1;
+    }
+
+
+</script>
+<p>p: <input type="text" id="FirstInput" required size="1"/> m: <input type="text" id="SecondInput" required size="1"/> q: <input type="text" id="ThirdInput" required size="1"/></p>
+<p> Время: </p>
+<p> Сложение: <input type="text" id="Sum" required size="1"/> Вычитание: <input type="text" id="Deg" required size="1"/> Произведение: <input type="text" id="Mult" required size="1"/> Операция сравнения: <input type="text" id="Oper" required size="1"/> Возведение в квадрат: <input type="text" id="Pow" required size="1"/> Взятие модуля: <input type="text" id="Abs" required size="1"/> </p>
+<p> Количество процессорных элементов (n): <input type="text" id="nElement" required size="1"/> </p>
+<p><input type="button" value="Count" onclick="finishprogram()"></p>
+<p> Матрцы: </p>
+<p> A: <input type="text" id="MatrixA"
+              required size="10"/> </p>
+<p> B: <input type="text" id="MatrixB" required size="10"/> </p>
+Графика:
+<p><input type="button" id="Graphics3" value="Ky\r"></p>
+<p><input type="button" id="Graphics1" value="Ky\n"></p>
+<p><input type="button" id="Graphics4" value="e\r"></p>
+<p><input type="button" id="Graphics2" value="e\n"></p>
+<p><input type="button" id="Graphics6" value="D\r"></p>
+<p><input type="button" id="Graphics5" value="D\n"></p>
+<div id="curve_chart" style="width: 1100px; height: 700px"></div>
+</body>
+</html>
